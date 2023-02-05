@@ -1,11 +1,15 @@
-
-
+const lang = navigator.language || navigator.languages[0];
+const options = {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric', 
+};
 
 function showTime() {
   const time = document.querySelector('.time');
   const date = new Date();
 
-  time.textContent = date.toLocaleTimeString();
+  time.textContent = date.toLocaleTimeString(lang);
   showDate();
   setTimeout(showTime, 1000);
 }
@@ -13,14 +17,8 @@ function showTime() {
 function showDate() {
   const dateTag = document.querySelector('.date');
   const date = new Date();
-  const options = {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric', 
-    timeZone: 'UTC'
-  };
 
-  dateTag.textContent = date.toLocaleDateString('en-US', options);
+  dateTag.textContent = date.toLocaleDateString(lang, options);
 }
 
 
