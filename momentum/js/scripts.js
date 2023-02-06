@@ -17,13 +17,15 @@ const temperature = document.querySelector('.temperature');
 const wind = document.querySelector('.wind');
 const humidity = document.querySelector('.humidity');
 const weatherDescription = document.querySelector('.weather-description');
+const quote = document.querySelector('.quote');
+const author = document.querySelector('.author');
+const changeQuote = document.querySelector('.change-quote');
 
-let randomNum;
+let randomNum = getRandomNum(1, 20);
 
-getRandomNum(1, 20);
 setBg();
 showTime();
-
+getQuotes('assets/json/quotes.json');
 
 window.addEventListener('beforeunload', setLocalStorage);
 window.addEventListener('load', getLocalStorage);
@@ -36,6 +38,10 @@ slidePrev.addEventListener('click', getSlidePrev);
 
 city.addEventListener('change', () => {
   getWeather();
+});
+
+changeQuote.addEventListener('click', () => {
+  getQuotes('assets/json/quotes.json');
 });
 
 
@@ -102,7 +108,7 @@ function getLocalStorage() {
 function getRandomNum(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function setBg() {
@@ -147,4 +153,15 @@ async function getWeather() {
     humidity.textContent = '';
     weatherDescription.textContent = `Город ${city.value} не найден ;(`;
   }
+}
+
+async function getQuotes(filePath) {  
+  const quotes = filePath;
+  const res = await fetch(quotes);
+  const data = await res.json(); 
+
+  let quoteNum = getRandomNum(0, data.length);
+
+  quote.textContent = data[quoteNum].text;
+  author.textContent = data[quoteNum].author;
 }
