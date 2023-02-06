@@ -5,12 +5,23 @@ const options = {
   day: 'numeric', 
 };
 
-showTime();
 
+const body = document.body;
 const name = document.querySelector('.name');
+const slideNext = document.querySelector('.slide-next');
+const slidePrev = document.querySelector('.slide-prev');
+
+let randomNum;
+
+getRandomNum(1, 20);
+setBg();
+showTime();
 
 window.addEventListener('beforeunload', setLocalStorage);
 window.addEventListener('load', getLocalStorage);
+
+slideNext.addEventListener('click', getSlideNext);
+slidePrev.addEventListener('click', getSlidePrev);
 
 
 function showTime() {
@@ -21,7 +32,7 @@ function showTime() {
   showDate();
   
   const greeting = document.querySelector('.greeting');
-  greeting.textContent = getTimeOfDay(getHours());
+  greeting.textContent = getGreeting(getHours());
 
   setTimeout(showTime, 1000);
 }
@@ -39,7 +50,14 @@ function getHours() {
   return date.getHours();
 }
 
-function getTimeOfDay(hour) {
+function getTimeOfDay() {
+  const tods = ['night', 'morning', 'afternoon', 'evening'];
+  let hour = getHours();
+ 
+  return tods[Math.floor(hour / 6)];
+}
+
+function getGreeting(hour) {
   let greetings;
 
   if (lang === 'ru') {
@@ -59,4 +77,33 @@ function getLocalStorage() {
   if(localStorage.getItem('name')) {
     name.value = localStorage.getItem('name');
   }
+}
+
+function getRandomNum(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function setBg() {
+  let timeOfDay = getTimeOfDay();
+  let bgNum = String(randomNum).padStart(2, '0');
+  const img = new Image();
+
+  img.src = `https://github.com/deepydee/stage1-tasks/raw/assets/images/${timeOfDay}/${bgNum}.jpg`;
+  img.onload = () => {      
+    body.style.backgroundImage = `url(${img.src})`;
+  }; 
+}
+
+function getSlideNext() {
+  randomNum++;
+  randomNum = randomNum === 21 ? 1 : randomNum;
+  setBg();
+}
+
+function getSlidePrev() {
+  randomNum--;
+  randomNum = randomNum === 0 ? 20 : randomNum;
+  setBg();
 }
