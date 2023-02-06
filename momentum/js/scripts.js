@@ -8,8 +8,15 @@ const options = {
 
 const body = document.body;
 const name = document.querySelector('.name');
+const city = document.querySelector('.city');
 const slideNext = document.querySelector('.slide-next');
 const slidePrev = document.querySelector('.slide-prev');
+
+const weatherIcon = document.querySelector('.weather-icon');
+const temperature = document.querySelector('.temperature');
+const wind = document.querySelector('.wind');
+const humidity = document.querySelector('.humidity');
+const weatherDescription = document.querySelector('.weather-description');
 
 let randomNum;
 
@@ -17,11 +24,19 @@ getRandomNum(1, 20);
 setBg();
 showTime();
 
+
 window.addEventListener('beforeunload', setLocalStorage);
 window.addEventListener('load', getLocalStorage);
+window.addEventListener('load', getWeather);
+
+
 
 slideNext.addEventListener('click', getSlideNext);
 slidePrev.addEventListener('click', getSlidePrev);
+
+city.addEventListener('change', () => {
+  getWeather();
+});
 
 
 function showTime() {
@@ -71,11 +86,16 @@ function getGreeting(hour) {
 
 function setLocalStorage() {
   localStorage.setItem('name', name.value);
+  localStorage.setItem('city', city.value);
 }
 
 function getLocalStorage() {
   if(localStorage.getItem('name')) {
     name.value = localStorage.getItem('name');
+  }
+
+  if(localStorage.getItem('city')) {
+    city.value = localStorage.getItem('city');
   }
 }
 
@@ -106,4 +126,25 @@ function getSlidePrev() {
   randomNum--;
   randomNum = randomNum === 0 ? 20 : randomNum;
   setBg();
+}
+
+async function getWeather() {
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city.value}&lang=${lang}&appid=bf40592ccd1eba31b075bb9d4bfbf7c7&units=metric`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    weatherIcon.className = 'weather-icon owf';
+    weatherIcon.classList.add(`owf-${data.weather[0].id}`);
+    temperature.textContent = `${Math.round(data.main.temp)} °C`;
+    weatherDescription.textContent = data.weather[0].description;
+    wind.textContent = `Скорость ветра: ${Math.round(data.wind.speed)} м/с`;
+    humidity.textContent = `Влажность: ${Math.round(data.main.humidity)}%`;
+  } catch (e) {
+    weatherIcon.className = '';
+    temperature.textContent = '';
+    wind.textContent = '';
+    humidity.textContent = '';
+    weatherDescription.textContent = `Город ${city.value} не найден ;(`;
+  }
 }
