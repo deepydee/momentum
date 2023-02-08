@@ -14,7 +14,7 @@ body {
   min-height: 100vh;
   font-family: 'Arial', sans-serif;
   font-size: 16px;
-  color: #fff;
+  color: rgb(255, 255, 255);
   text-align: center;
   background: url("") center/cover, rgba(0, 0, 0, 0.5);
   background-blend-mode: multiply;
@@ -30,6 +30,11 @@ body {
   min-height: 220px;  
   padding: 20px;
 }
+
+.player {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}  
 
 .player-controls {
   display: flex;
@@ -127,6 +132,8 @@ body {
   width: 180px;
   min-height: 180px;  
   text-align: left;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .weather-error {
@@ -198,16 +205,20 @@ body {
   margin-bottom: 10px;
   font-family: 'Arial-MT';
   font-size: 100px;
-  letter-spacing: -4px;  
+  letter-spacing: -4px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .date {
   min-height: 28px;
   font-size: 24px;
   margin-bottom: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.greeting-container {
+.greeting {
   display: flex;
   flex-wrap: wrap;
   justify-content: stretch;
@@ -215,9 +226,11 @@ body {
   min-height: 48px;
   width: 100%;
   font-size: 40px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.greeting {
+.greeting-text {
   flex: 1;  
   padding: 10px;
   text-align: right;
@@ -246,9 +259,14 @@ body {
   justify-content: flex-end;
   align-items: center;
   width: 100%;
-  height: 30vh;
+  height: 28vh;
   min-height: 160px;  
   padding: 20px;
+}
+
+.quote {
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .change-quote {
@@ -256,12 +274,344 @@ body {
   background-image: url("../assets/svg/reload.svg");  
 }
 
-.quote {
+.quote-text {
   min-height: 32px;
+  margin-bottom: 6px;
+  transition: all 0.4s ease;
 }
 
 .author {
   min-height: 20px;
+}
+
+.settings-general,
+.settings-background,
+.settings-quote,
+.settings-player {
+  display: none;
+}
+
+.tab-visible {
+  display: block;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.settings {
+  align-self: flex-start;
+}
+
+.app-wrapper {
+  position: relative;
+  bottom: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+}
+
+.settings.show-fade-in .app-wrapper {
+  opacity: 0.98;
+  visibility: visible;
+}
+
+.app {
+  position: absolute;
+  bottom: 12px;
+  max-height: 100vh;
+  min-width: 200px;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-align: left;
+  color: hsl(232, 19%, 16%);
+}
+
+.settings-app {
+  height: 520px;
+  width: 720px;
+  padding: 0;
+}
+
+.nipple-bottom-left:after {
+  position: absolute;
+  content: '';
+  bottom: 5px;
+  left: 30px;
+  height: 0;
+  width: 0;
+  overflow: visible;
+  display: block;
+  opacity: 1;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid #fff;
+}
+
+.settings-nav {
+  height: 520px;
+  width: 200px;
+  margin-top: 0;
+  padding: 23px 0 0;
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  border-right: 1px solid hsl(219, 12%, 68%);
+  float: left;
+  overflow: hidden;
+}
+
+.settings-nav .active {
+  opacity: 1 !important;
+  font-weight: bold !important;
+}
+
+.settings-nav-list {
+  flex-grow: 1;
+}
+
+.settings-nav .settings-nav-item {
+  padding: 5px 20px;
+  flex: 0 0 auto;
+  display: block;
+  opacity: 0.65;
+  cursor: pointer;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  transition: opacity 0.4s ease;
+}
+
+.settings-nav .settings-nav-item:hover {
+  opacity: 0.85;
+}
+
+.settings-view-container-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.settings-view-container {
+  flex-grow: 1;
+}
+
+.settings-view {
+  min-height: 100%;
+  width: 507px;
+  padding: 30px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.settings h3 {
+  margin: -1px 0 2px;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.settings .description {
+  margin: 3px 0 21px;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  opacity: 0.7;
+}
+
+.settings .first {
+  margin-top: 0;
+  margin: 39px 0 13px;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.options-list {
+  padding: 0;
+  list-style-type: none;
+  margin-bottom: 15px;
+}
+
+.settings-list li {
+  margin: 0;
+  padding: 11px 6px;
+  border-top: 1px solid rgb(214, 214, 214);
+}
+
+.slide-toggle {
+  padding: 11px 6px;
+  position: relative;
+  cursor: pointer;
+}
+
+.has-toggle:hover .toggle-slider {
+  background-color: rgb(66, 66, 66);
+}
+
+.on:not(.disabled).has-toggle:hover .toggle-slider {
+  background: #7edc74;
+}
+
+.setting-name {
+  opacity: 0.9;
+}
+
+.slide-toggle input[type=checkbox] {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+}
+
+.slide-toggle.disabled .toggle-slider {
+  opacity: .5;
+}
+
+.app input, .app select, .app textarea {
+  width: 100%;
+  padding: 6px 1px;
+  border: 0;
+  border-bottom: 2px solid gray;
+  -webkit-border-radius: 0;
+  border-radius: 0;
+  color: black;
+  font-size: 100%;
+  outline: 0;
+  transition: border .1s ease;
+}
+
+
+
+.on:not(.disabled) .toggle-slider {
+  background: #4cbf3f;
+}
+
+.on:not(.disabled) .toggle-switch {
+  transform: translateX(14px) scale(1.25);
+}
+
+.toggle-switch {
+  position: relative;
+  height: 12px;
+  width: 12px;
+  top: 4px;
+  left: 3px;
+  display: inline-block;
+  transform-origin: 50% 50%;
+  transition: transform 0.3s ease;
+  vertical-align: top;
+}
+
+.on:not(.disabled) .toggle-switch circle {
+  opacity: 1;
+}
+
+.toggle-switch circle {
+  opacity: .7;
+  fill: #fff;
+}
+
+.toggle-slider {
+  position: relative;
+  height: 20px;
+  width: 33px;
+  background: gray;
+  border-radius: 30px;
+  float: right;
+}
+
+.toggle-lang .toggle-slider {
+  background-color: #fff;
+  border: 1px solid #d3d2d2;
+}
+
+.toggle-lang .toggle-switch circle {
+  fill: #d3d2d2;
+}
+
+.toggle-lang.on .toggle-slider {
+  background: #fff;
+}
+
+.toggle-lang .on:hover .toggle-slider {
+  background: #fff;
+}
+
+.settings-list .toggle-slider {
+  margin-top: -1px;
+  margin-right: -1px;
+}
+
+.toggle {
+  margin-left: 15px;
+  height: 60px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity .15s ease, filter .15s ease;
+}
+
+.toggle:hover {
+  opacity: 0.8;
+}
+
+.settings .toggle-icon {
+  height: 18px;
+  width: 18px;
+  transition: transform 0.15s;
+}
+
+.settings.show-fade-in .toggle {
+  opacity: 1;
+}
+
+.settings.show-fade-in .toggle-icon {
+  transform: rotate(38deg) scale(1.1);
+}
+
+.settings-nav-chooser {
+  display: none;
+}
+
+.mobile-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 21px;
+  display: block;
+}
+
+.icon-wrapper {
+  padding: 5px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-wrapper:after {
+  content: '';
+  height: 25px;
+  width: 25px;
+  position: absolute;
+  z-index: 2;
+  display: block;
+  border-radius: 50px;
+  background:rgb(226, 223, 223)
+}
+
+.mobile-close .icon {
+  height: 9px;
+  width: 9px;
+  opacity: 0.8;
+  z-index: 12;
+  fill: hsl(120, 11%, 11%);
+}
+
+.settings-nav-header {
+  display: none;
 }
 
 @media (max-width: 768px) {

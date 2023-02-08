@@ -1,91 +1,168 @@
 import playList from './playList.js';
 
-const lang = navigator.language || navigator.languages[0];
-const options = {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric', 
-};
-
-
 const body = document.body;
-
 const name = document.querySelector('.name');
 const city = document.querySelector('.city');
-
 const slideNext = document.querySelector('.slide-next');
 const slidePrev = document.querySelector('.slide-prev');
-
 const weatherIcon = document.querySelector('.weather-icon');
 const temperature = document.querySelector('.temperature');
 const wind = document.querySelector('.wind');
 const humidity = document.querySelector('.humidity');
 const weatherDescription = document.querySelector('.weather-description');
-
-const quote = document.querySelector('.quote');
+const weatherError = document.querySelector('.weather-error');
+const quote = document.querySelector('.quote-text');
 const author = document.querySelector('.author');
 const changeQuote = document.querySelector('.change-quote');
-
 const audio = new Audio();
 const buttonPlay = document.querySelector('.play');
 const buttonNext = document.querySelector('.play-next');
 const buttonPrev = document.querySelector('.play-prev');
-
 const playListContainer = document.querySelector('.play-list');
+const settingsDashboard = document.querySelector('.settings');
+const settingsToggle = document.querySelector('.settings .toggle');
+const mobileCloseTablet = document.querySelector('.settings-tablet-control .mobile-close');
+const settingsList = document.querySelector('#apps-list');
+const settingsNavList = document.querySelector('.settings-nav-list');
+const buttonToggleLang = document.querySelector('.toggle-lang');
+const languageText = document.querySelector('.toggle-lang .setting-name');
 
+let state = {
+  language: 'en',
+  photoSource: 'github',
+  blocks: ['time', 'date','greeting', 'quote', 'weather', 'player']
+}
+let lang = state['language'];
 let isPlay = false;
 let playNum = 0;
 let randomNum = getRandomNum(1, 20);
 
-setBg();
-showTime();
-getQuotes('assets/json/quotes.json');
-makePlayList();
-
+/**
+ * Load/Save Settings
+ */
 window.addEventListener('beforeunload', setLocalStorage);
 window.addEventListener('load', getLocalStorage);
+window.addEventListener('load', setState);
 window.addEventListener('load', getWeather);
+window.addEventListener('load', () => {
+  getQuotes(`assets/json/quotes-${lang}.json`);
+  showTime();
+  makePlayList();
+});
 
+setBg();
 
-
+/**
+ * Slider Widget
+ */
 slideNext.addEventListener('click', getSlideNext);
 slidePrev.addEventListener('click', getSlidePrev);
 
+/**
+ * Weather Widget
+ */
 city.addEventListener('change', () => {
   getWeather();
 });
 
 changeQuote.addEventListener('click', () => {
-  getQuotes('assets/json/quotes.json');
+  getQuotes(`assets/json/quotes-${lang}.json`);
 });
 
+/**
+ * Simple Player Widget
+ */
 buttonPlay.addEventListener('click', playAudio);
-
 buttonNext.addEventListener('click', playNext);
 buttonPrev.addEventListener('click', playPrev);
-
 audio.addEventListener('ended', () => {
     playNext();
 });
 
+/**
+ * Settings Dashboard
+ */
+settingsToggle.addEventListener('click', () => {
+  settingsDashboard.classList.toggle('show-fade-in');
+});
+
+mobileCloseTablet.addEventListener('click', () => {
+  settingsDashboard.classList.remove('show-fade-in');
+});
+
+settingsList.addEventListener('click', (event) => {
+  let settingsItem = event.target;
+  let slideToggle = settingsItem.closest('.slide-toggle');
+  let widgetName = slideToggle.dataset.relatedWidget;
+  
+  if (slideToggle.classList.contains('on')) {
+    slideToggle.classList.remove('on');
+    slideToggle.classList.add('disabled');
+    state.blocks.splice(state.blocks.indexOf(widgetName), 1);
+    toggleWidget(widgetName);
+  } else {
+    slideToggle.classList.remove('disabled');
+    slideToggle.classList.add('on');
+    state.blocks.push(widgetName);
+    toggleWidget(widgetName);
+  }
+});
+
+settingsNavList.addEventListener('click', (event) => {
+  let menuItem = event.target;
+  let currentNavItem = menuItem.dataset.navitem;
+  
+  [...event.currentTarget.children].forEach(
+    (item) => {
+      if (item.classList.contains('active')) {
+        item.classList.remove('active');
+        document.querySelector(`.settings-${item.dataset.navitem}`).classList.remove('tab-visible');
+      }
+  });
+
+    menuItem.classList.add('active');
+    document.querySelector(`.settings-${currentNavItem}`).classList.add('tab-visible');
+});
+
+buttonToggleLang.addEventListener('click', (event) => {
+  let li = event.target.closest('li');
+  li.classList.toggle('on');
+
+  if (state.language === 'ru') {
+    languageText.textContent = 'English';
+    state.language = 'en';
+    lang = 'en';
+  } else {
+    languageText.textContent = 'Русский';
+    state.language = 'ru';
+    lang = 'ru';
+  }
+  getWeather();
+  getQuotes(`assets/json/quotes-${lang}.json`);
+});
+
+
 function showTime() {
   const time = document.querySelector('.time');
   const date = new Date();
+  const greeting = document.querySelector('.greeting-text');
 
   time.textContent = date.toLocaleTimeString(lang);
   showDate();
-  
-  const greeting = document.querySelector('.greeting');
   greeting.textContent = getGreeting(getHours());
-
   setTimeout(showTime, 1000);
 }
 
 function showDate() {
   const dateTag = document.querySelector('.date');
-  const date = new Date();
+  const dateOptions = {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric', 
+  };
 
-  dateTag.textContent = date.toLocaleDateString(lang, options);
+  const date = new Date();
+  dateTag.textContent = date.toLocaleDateString(lang, dateOptions);
 }
 
 function getHours() {
@@ -116,6 +193,7 @@ function getGreeting(hour) {
 function setLocalStorage() {
   localStorage.setItem('name', name.value);
   localStorage.setItem('city', city.value);
+  localStorage.setItem('state', JSON.stringify(state));
 }
 
 function getLocalStorage() {
@@ -125,6 +203,10 @@ function getLocalStorage() {
 
   if(localStorage.getItem('city')) {
     city.value = localStorage.getItem('city');
+  }
+
+  if(localStorage.getItem('state')) {
+    state = JSON.parse(localStorage.getItem('state'));
   }
 }
 
@@ -163,6 +245,7 @@ async function getWeather() {
     const res = await fetch(url);
     const data = await res.json();
 
+    weatherError.textContent = '';
     weatherIcon.className = 'weather-icon owf';
     weatherIcon.classList.add(`owf-${data.weather[0].id}`);
     temperature.textContent = `${Math.round(data.main.temp)} °C`;
@@ -174,7 +257,8 @@ async function getWeather() {
     temperature.textContent = '';
     wind.textContent = '';
     humidity.textContent = '';
-    weatherDescription.textContent = `Город ${city.value} не найден ;(`;
+    weatherDescription.textContent = '';
+    weatherError.textContent = `Город ${city.value} не найден ;(`;
   }
 }
 
@@ -240,4 +324,38 @@ function stylePlayItems() {
     ? item.classList.add('item-active')
     : item.classList.remove('item-active')
   );
+}
+
+function setState() {
+  lang = state.language;
+  state.blocks.forEach(
+    widget => showWidget(widget)
+  );
+
+  [...settingsList.children].forEach(
+    (li) => state.blocks.includes(li.dataset.relatedWidget)
+    ? li.classList.add('on')
+    : li.classList.add('disabled')
+  );
+  
+  if (lang === 'ru') {
+    languageText.textContent = 'Русский';
+    buttonToggleLang.closest('li').classList.remove('on');
+  } else {
+    languageText.textContent = 'English';
+    buttonToggleLang.closest('li').classList.add('on');
+  }
+   
+}
+
+function toggleWidget(widgetName) {
+  const widget = document.querySelector(`.${widgetName}`);
+
+  widget.classList.toggle('visible');
+}
+
+function showWidget(widgetName) {
+  const widget = document.querySelector(`.${widgetName}`);
+
+  widget.classList.add('visible');
 }
