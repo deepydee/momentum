@@ -295,10 +295,6 @@ body {
   display: block;
 }
 
-.visible {
-  opacity: 1;
-}
-
 .settings {
   align-self: flex-start;
 }
@@ -490,9 +486,11 @@ body {
   transition: border .1s ease;
 }
 
-.app .settings-label, .app .settings-submit {
+.settings-label, .settings-submit {
   display: inline-block;
   margin-top: 24px;
+  opacity: 0;
+  transition: opacity 0.4s;
 }
 
 .on:not(.disabled) .toggle-slider {
@@ -622,6 +620,14 @@ body {
 }
 
 .settings-nav-header {
+  display: none;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.visually-hidden {
   display: none;
 }
 

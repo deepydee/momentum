@@ -157,6 +157,14 @@ imageSourceSelect.addEventListener('change', (event) => {
   customTag = (customSlideTag.value !== '') 
   ? customSlideTag.value
   : '';
+
+  if (event.target.value === 'github') {
+    document.querySelector('.app .settings-label').classList.remove('visible');
+    buttonSubmitBgChange.classList.remove('visible');
+  } else {
+    document.querySelector('.app .settings-label').classList.add('visible');
+    buttonSubmitBgChange.classList.add('visible');
+  }
   
   getLinkToImage();
 });
