@@ -413,6 +413,14 @@ body {
   font-weight: 600;
 }
 
+.settings-view h4 {
+  margin-bottom: 15px;
+}
+
+.bg-info {
+  margin-top: 12px;
+}
+
 .settings .description {
   margin: 3px 0 21px;
   font-size: 0.875rem;
@@ -473,7 +481,7 @@ body {
   width: 100%;
   padding: 6px 1px;
   border: 0;
-  border-bottom: 2px solid gray;
+  border-bottom: 2px solid rgb(231, 225, 225);
   -webkit-border-radius: 0;
   border-radius: 0;
   color: black;
@@ -482,7 +490,10 @@ body {
   transition: border .1s ease;
 }
 
-
+.app .settings-label, .app .settings-submit {
+  display: inline-block;
+  margin-top: 24px;
+}
 
 .on:not(.disabled) .toggle-slider {
   background: #4cbf3f;

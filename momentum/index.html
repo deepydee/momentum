@@ -164,7 +164,21 @@
             <p class="description">Настройки фонового изображения</p>
           </header>
 
-          <h4>Подпункт</h4>
+          <h4>Выберите источник изображений</h4>
+          <form action="#" method="post">
+            <select name="imageSource" id="image-source">
+              <option value="github">github</option>
+              <option value="unsplash">Unsplash</option>
+              <option value="flickr">Flickr</option>
+            </select>
+            <label class="settings-label">
+              Тема
+              <input type="text" placeholder="nature" id="slide-tag">
+            </label>
+            <input type="submit" value="Поехали!" id="submitSlideChange" class="settings-submit">
+          </form>
+
+          <p class="bg-info"></p>
         </div>
 
         <div id="settings-quote" class="settings-view settings-quote">
@@ -174,7 +188,8 @@
             <p class="description">Настройки цитат</p>
           </header>
 
-          <h4>Подпункт</h4>
+          <h4>Выберите</h4>
+          
         </div>
 
         <div id="settings-player" class="settings-view settings-player">

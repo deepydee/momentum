@@ -1,5 +1,8 @@
 import playList from './playList.js';
 
+const unsplashApiKey = 'uDuPL8kLMy1AJOU4p4xDFu0-XRwLYTDkREhOQewMadU';
+const flickrApiKey = '6b55fdbcf8f7d61ab2f0826f940fada0';
+
 const body = document.body;
 const name = document.querySelector('.name');
 const city = document.querySelector('.city');
@@ -26,6 +29,10 @@ const settingsList = document.querySelector('#apps-list');
 const settingsNavList = document.querySelector('.settings-nav-list');
 const buttonToggleLang = document.querySelector('.toggle-lang');
 const languageText = document.querySelector('.toggle-lang .setting-name');
+const imageSourceSelect = document.querySelector('#image-source');
+const settingsSliderInfoAlert = document.querySelector('.bg-info');
+const customSlideTag = document.querySelector('#slide-tag');
+const buttonSubmitBgChange = document.querySelector('.settings-submit');
 
 let state = {
   language: 'en',
@@ -36,21 +43,22 @@ let lang = state['language'];
 let isPlay = false;
 let playNum = 0;
 let randomNum = getRandomNum(1, 20);
+let customTag = '';
 
 /**
  * Load/Save Settings
  */
 window.addEventListener('beforeunload', setLocalStorage);
-window.addEventListener('load', getLocalStorage);
-window.addEventListener('load', setState);
-window.addEventListener('load', getWeather);
 window.addEventListener('load', () => {
+  getLocalStorage();
+  setState();
+  getLinkToImage();
   getQuotes(`assets/json/quotes-${lang}.json`);
+  getWeather();
   showTime();
   makePlayList();
 });
 
-setBg();
 
 /**
  * Slider Widget
@@ -142,6 +150,28 @@ buttonToggleLang.addEventListener('click', (event) => {
 });
 
 
+imageSourceSelect.addEventListener('change', (event) => {
+  let photoSource = event.target.value;
+
+  state.photoSource = photoSource;
+  customTag = (customSlideTag.value !== '') 
+  ? customSlideTag.value
+  : '';
+  
+  getLinkToImage();
+});
+
+
+buttonSubmitBgChange.addEventListener('click', (event) => {
+  event.preventDefault();
+  
+  customTag = (customSlideTag.value !== '') 
+  ? customSlideTag.value
+  : '';
+
+  getLinkToImage();
+});
+
 function showTime() {
   const time = document.querySelector('.time');
   const date = new Date();
@@ -216,27 +246,81 @@ function getRandomNum(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function setBg() {
-  let timeOfDay = getTimeOfDay();
-  let bgNum = String(randomNum).padStart(2, '0');
+function setBg(url) {
   const img = new Image();
 
-  img.src = `https://github.com/deepydee/stage1-tasks/raw/assets/images/${timeOfDay}/${bgNum}.jpg`;
+  img.src = url;
   img.onload = () => {      
     body.style.backgroundImage = `url(${img.src})`;
+    settingsSliderInfoAlert.textContent = '';
   }; 
 }
+
+async function getLinkToImage() {
+  let timeOfDay = getTimeOfDay();
+  
+  let bgNum = String(randomNum).padStart(2, '0');
+  let imgLink = '', imgUrl = '';
+  let res, data;
+
+  switch (state.photoSource) {
+    case 'github':
+      imgUrl = `https://github.com/deepydee/stage1-tasks/raw/assets/images/${timeOfDay}/${bgNum}.jpg`;
+      settingsSliderInfoAlert.textContent = 'Подключаемся к github...';
+      break;
+    case 'unsplash':
+
+      if (customTag !== '') {
+        timeOfDay = customTag;
+      } else {
+        timeOfDay = getTimeOfDay();
+      }
+
+      imgLink = `https://api.unsplash.com/photos/random?orientation=landscape&query=${timeOfDay}&client_id=${unsplashApiKey}`;
+
+      try {
+        settingsSliderInfoAlert.textContent = 'Подключаемся к Unsplash API...';
+        res = await fetch(imgLink);
+        data = await res.json();
+        imgUrl = data.urls.regular;
+      } catch (error) {
+        settingsSliderInfoAlert.textContent = 'Ошибка подключения к Unsplash API';
+      }
+      break;
+    case 'flickr':
+
+      if (customTag !== '') {
+        timeOfDay = customTag;
+      } else {
+        timeOfDay = getTimeOfDay();
+      }
+
+      imgLink = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${flickrApiKey}&tags=${timeOfDay}&extras=url_l&format=json&nojsoncallback=1`;
+      try {
+        settingsSliderInfoAlert.textContent = 'Подключаемся к Flickr API...';
+        res = await fetch(imgLink);
+        data = await res.json();
+        imgUrl = data.photos.photo[randomNum].url_l;
+      } catch (error) {
+        settingsSliderInfoAlert.textContent = 'Ошибка подключения к Unsplash API';
+      }
+      break;
+    default:
+      imgUrl = `https://github.com/deepydee/stage1-tasks/raw/assets/images/${timeOfDay}/${bgNum}.jpg`;
+  }
+  setBg(imgUrl);
+ }
 
 function getSlideNext() {
   randomNum++;
   randomNum = randomNum === 21 ? 1 : randomNum;
-  setBg();
+  getLinkToImage();
 }
 
 function getSlidePrev() {
   randomNum--;
   randomNum = randomNum === 0 ? 20 : randomNum;
-  setBg();
+  getLinkToImage();
 }
 
 async function getWeather() {
@@ -266,7 +350,6 @@ async function getQuotes(filePath) {
   const quotes = filePath;
   const res = await fetch(quotes);
   const data = await res.json(); 
-
   let quoteNum = getRandomNum(0, data.length);
 
   quote.textContent = data[quoteNum].text;
@@ -346,6 +429,11 @@ function setState() {
     buttonToggleLang.closest('li').classList.add('on');
   }
    
+  [...imageSourceSelect.children].forEach(
+    (option) => option.value === state.photoSource
+    ? option.setAttribute('selected', 'selected')
+    : option.removeAttribute('selected')
+  );
 }
 
 function toggleWidget(widgetName) {
