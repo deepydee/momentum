@@ -45,16 +45,14 @@ const settingsSliderInfoAlert = document.querySelector('.bg-info');
 const customSlideTag = document.querySelector('#slide-tag');
 const buttonSubmitBgChange = document.querySelector('.settings-submit');
 
-const todo =  document.querySelector('#todo');
+const todo = document.querySelector('#todo');
 const todoToggle = document.querySelector('.todo-toggle');
 const activeListContainer = document.querySelector('.active-list-container');
 const todoListChooserToggle = document.querySelector('.list-chooser-toggle');
 const todoListWrapper = document.querySelector('.todo-list-wrapper');
 const todoList = document.querySelector('.todo-list');
-const headerDropdown = document.querySelector('.todo-header .dropdown');
 const todoNewInput = document.querySelector('#todo-new');
 const todoListChooserDropdown = document.querySelector('.list-chooser');
-const todoItemTitle = document.querySelector('.todo-item-title');
 
 let todoListType = document.querySelector('.todo-list-choice-active').dataset.listId;
 
@@ -87,13 +85,36 @@ window.addEventListener('DOMContentLoaded', () => {
   getLocalStorage();
   setState();
   getLinkToImage();
-  getWeather();
   showTime();
   makePlayList();
   getQuotes(`assets/json/quotes-${lang}.json`)
+
+  i18next
+    .use(i18nextHttpBackend)
+    .use(i18nextBrowserLanguageDetector)
+    .init({
+      fallbackLng: 'en',
+      debug: false,
+      ns: ['common', 'errors'],
+      defaultNS: 'common',
+      backend: {
+        loadPath: 'locales/{{lng}}/{{ns}}.json',
+        crossDomain: true
+      }
+    }, function(err, t) {
+      updateContent();
+    });
+});
+
+window.addEventListener('load', () => {
+  changeLng(lang);
+  getWeather();
 });
 
 
+i18next.on('languageChanged', () => {
+  updateContent();
+});
 
 /**
  * Slider Widget
@@ -219,6 +240,7 @@ buttonToggleLang.addEventListener('click', (event) => {
     state.language = 'ru';
     lang = 'ru';
   }
+  changeLng(lang);
   getWeather();
   getQuotes(`assets/json/quotes-${lang}.json`);
 });
@@ -610,26 +632,30 @@ async function getWeather() {
     weatherIcon.classList.add(`owf-${data.weather[0].id}`);
     temperature.textContent = `${Math.round(data.main.temp)} °C`;
     weatherDescription.textContent = data.weather[0].description;
-    wind.textContent = `Скорость ветра: ${Math.round(data.wind.speed)} м/с`;
-    humidity.textContent = `Влажность: ${Math.round(data.main.humidity)}%`;
+    wind.textContent = i18next.t('common:weather.windspeed', {windSpeed: Math.round(data.wind.speed)});
+    humidity.textContent = i18next.t('common:weather.humidity', {humidity: Math.round(data.main.humidity)});
   } catch (e) {
     weatherIcon.className = '';
     temperature.textContent = '';
     wind.textContent = '';
     humidity.textContent = '';
     weatherDescription.textContent = '';
-    weatherError.textContent = `Город ${city.value} не найден ;(`;
+    weatherError.textContent = i18next.t('errors:weather.cityNotFound', {city: city.value});
   }
 }
 
 async function getQuotes(filePath) {  
-  const quotes = filePath;
-  const res = await fetch(quotes);
-  const data = await res.json(); 
-  let quoteNum = getRandomNum(0, data.length);
+  try {
+    const quotes = filePath;
+    const res = await fetch(quotes);
+    const data = await res.json(); 
+    let quoteNum = getRandomNum(0, data.length);
 
-  quote.textContent = `"${data[quoteNum].text}"`;
-  author.textContent = data[quoteNum].author;
+    quote.textContent = `"${data[quoteNum].text}"`;
+    author.textContent = data[quoteNum].author;
+  } catch (e) {
+    quote.textContent = `${e.name}: ${e.message}`;
+  }
 }
 
 function playAudio() {
@@ -647,7 +673,6 @@ function playAudio() {
     buttonPlay.classList.add('pause');
     isPlay = true;
     stylePlayItems();
-    // setTimeout(hidePlaylist, 1000);
   }
 }
 
@@ -703,13 +728,6 @@ function togglePlaylist() {
   } else {
     playListContainer.style.height = "0";
   }
-}
-
-function hidePlaylist() {
-  buttonShowPlaylist.classList.add('hide');
-  playListContainer.classList.remove('visible');
-
-  playListContainer.style.height = "0";
 }
 
 function changeProgressBar() {
@@ -821,7 +839,6 @@ function setState() {
     ? option.setAttribute('selected', 'selected')
     : option.removeAttribute('selected')
   );
-
   setTodoState();
 }
 
@@ -897,21 +914,21 @@ function addTodo(id, title, done = false) {
 function addMoreDropdown() {
   let html = `
     <li class="dropdown-list-item" data-action="edit">
-       <span class="dropdown-list-label">Редактировать</span>
+       <span class="dropdown-list-label">${i18next.t('todo.itemOptions.edit', {ns: 'common'})}</span>
     </li>`;
     
     if (todoListType === 'inbox') {
       html += `<li class="dropdown-list-item" data-action="moveToday">
-      <span class="dropdown-list-label">Перенести на сегодня</span>
+      <span class="dropdown-list-label">${i18next.t('todo.itemOptions.moveToToday', {ns: 'common'})}</span>
     </li>`;
     } else if (todoListType === 'today') {
       html += `<li class="dropdown-list-item" data-action="moveInbox">
-      <span class="dropdown-list-label">Перенести во входящие</span>
+      <span class="dropdown-list-label">${i18next.t('todo.itemOptions.moveToInbox', {ns: 'common'})}</span>
       </li>`;
     }
     
     html += `<li class="dropdown-list-item" data-action="remove">
-      <span class="dropdown-list-label">Удалить</span>
+      <span class="dropdown-list-label">${i18next.t('todo.itemOptions.delete', {ns: 'common'})}</span>
     </li>`;
 
     return html;
@@ -966,6 +983,38 @@ function uuidv4() {
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
 }
+
+function updateContent() {
+  name.placeholder = i18next.t('name.placeholder', {ns: 'common'});
+  city.placeholder = i18next.t('weather.city.placeholder');
+
+  document.querySelector('[data-navitem="general"]').textContent = i18next.t('settings.mainMenu.general', {ns: 'common'});
+  document.querySelector('[data-navitem="background"]').textContent = i18next.t('settings.mainMenu.slider', {ns: 'common'});
+  document.querySelector('#settings-general h3').textContent = i18next.t('settings.main.settingsHeader', {ns: 'common'});
+  document.querySelector('#settings-general .description').textContent = i18next.t('settings.main.description', {ns: 'common'});
+  document.querySelector('#settings-general h4:first-of-type').textContent = i18next.t('settings.main.languageHeader', {ns: 'common'});
+  document.querySelector('#settings-general .first').textContent = i18next.t('settings.main.widgets.header', {ns: 'common'});
+  document.querySelector('[data-related-widget="time"] .setting-name').textContent = i18next.t('settings.main.widgets.time', {ns: 'common'});
+  document.querySelector('[data-related-widget="date"] .setting-name').textContent = i18next.t('settings.main.widgets.date', {ns: 'common'});
+  document.querySelector('[data-related-widget="greeting"] .setting-name').textContent = i18next.t('settings.main.widgets.greeting', {ns: 'common'});
+  document.querySelector('[data-related-widget="player"] .setting-name').textContent = i18next.t('settings.main.widgets.audioplayer', {ns: 'common'});
+  document.querySelector('[data-related-widget="weather"] .setting-name').textContent = i18next.t('settings.main.widgets.weather', {ns: 'common'});
+  document.querySelector('[data-related-widget="quote"] .setting-name').textContent = i18next.t('settings.main.widgets.quote', {ns: 'common'});
+  document.querySelector('[data-related-widget="todo"] .setting-name').textContent = i18next.t('settings.main.widgets.todo', {ns: 'common'});
+
+  document.querySelector('.todo-toggle').textContent = i18next.t('todo.header', {ns: 'common'});
+  document.querySelector('li[data-list-id="inbox"] .list-name').textContent = i18next.t('todo.mainOptions.inbox', {ns: 'common'});
+  document.querySelector('li[data-list-id="today"] .list-name').textContent = i18next.t('todo.mainOptions.today', {ns: 'common'});
+  document.querySelector('li[data-list-id="done"] .list-name').textContent = i18next.t('todo.mainOptions.done', {ns: 'common'});
+
+  document.querySelector('.active-list-name').textContent = document.querySelector('.todo-list-choice-active .list-name').textContent;
+  document.querySelector('#todo-new').placeholder = i18next.t('todo.tasks.newTodo', {ns: 'common'});
+}
+
+function changeLng(lng) {
+  i18next.changeLanguage(lng);
+}
+
 
 const crosscheckMessage = `
   1. Часы и календарь +15

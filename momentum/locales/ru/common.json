@@ -1,0 +1,56 @@
+{
+  "name": {
+    "placeholder": "Введите имя"
+  },
+  "weather": {
+    "city": {
+      "placeholder": "Город",
+      "default": "Минск"
+    },
+    "windspeed": "Скорость ветра: {{windSpeed}} м/с",
+    "humidity": "Влажность: {{humidity}}%"
+  },
+  "settings": {
+    "mainMenu": {
+      "general": "Основные",
+      "slider": "Слайдер"
+    },
+    "main": {
+      "settingsHeader": "Основные",
+      "description": "Настройки панели управления",
+      "languageHeader": "Язык",
+      "widgets": {
+        "header": "Виджеты",
+        "time": "Часы",
+        "date": "Дата",
+        "greeting": "Приветствие",
+        "audioplayer": "Аудиоплеер",
+        "weather": "Погода",
+        "quote": "Цитаты",
+        "todo": "Список дел"
+      }
+    },
+    "slider": {
+      "settingsHeader": "Слайдер",
+      "subheader": "Выберите источник",
+      "description": "Настройте источние для слайдшоу"
+    }
+  },
+  "todo": {
+    "header": "Список дел",
+    "mainOptions": {
+      "inbox": "Входящие",
+      "today": "Сегодня",
+      "done": "Сделано"
+    },
+    "itemOptions": {
+      "edit": "Редактировать",
+      "moveToToday": "Переместить на сегодня",
+      "moveToInbox": "Переместить во входящие",
+      "delete": "Удалить"
+    },
+    "tasks": {
+      "newTodo": "Новая задача"
+    }
+  }
+}

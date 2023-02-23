@@ -1,0 +1,56 @@
+{
+  "name": {
+    "placeholder": "Type your name"
+  },
+  "weather": {
+    "city": {
+      "placeholder": "City",
+      "default": "Minsk"
+    },
+    "windspeed": "Wind speed: {{windSpeed}} mps",
+    "humidity": "Humidity: {{humidity}}%"
+  },
+  "settings": {
+    "mainMenu": {
+      "general": "General",
+      "slider": "Slider"
+    },
+    "main": {
+      "settingsHeader": "General",
+      "description": "Customize your dashboard",
+      "languageHeader": "Language",
+      "widgets": {
+        "header": "Widgets",
+        "time": "Clock",
+        "date": "Date",
+        "greeting": "Greeting",
+        "audioplayer": "Audioplayer",
+        "weather": "Weather",
+        "quote": "Quote",
+        "todo": "Todo"
+      }
+    },
+    "slider": {
+      "settingsHeader": "Slider",
+      "subheader": "Choose slideshow source",
+      "description": "Customize your slider"
+    }
+  },
+  "todo": {
+    "header": "Todo",
+    "mainOptions": {
+      "inbox": "Inbox",
+      "today": "Today",
+      "done": "Done"
+    },
+    "itemOptions": {
+      "edit": "Edit",
+      "moveToToday": "Move to Today",
+      "moveToInbox": "Move to Inbox",
+      "delete": "Delete"
+    },
+    "tasks": {
+      "newTodo": "New Todo"
+    }
+  }
+}

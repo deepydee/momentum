@@ -764,7 +764,7 @@ input[type="range"]:active::-webkit-slider-thumb {
 .mobile-close {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 12px;
   padding: 21px;
   display: block;
 }

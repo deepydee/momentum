@@ -1,0 +1,5 @@
+{
+  "weather": {
+    "cityNotFound": "Город {{city}} не найден ;("
+  }
+}
