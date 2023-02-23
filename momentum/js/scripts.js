@@ -17,10 +17,21 @@ const weatherError = document.querySelector('.weather-error');
 const quote = document.querySelector('.quote-text');
 const author = document.querySelector('.author');
 const changeQuote = document.querySelector('.change-quote');
+const audioPlayerContainer = document.querySelector('.player');
 const audio = new Audio();
 const buttonPlay = document.querySelector('.play');
 const buttonNext = document.querySelector('.play-next');
 const buttonPrev = document.querySelector('.play-prev');
+const buttonShowPlaylist = document.querySelector('.show-playlist');
+const progressBar = document.querySelector('#progress-bar');
+const volumeSlider = document.querySelector('#volume-slider');
+const volumeOutput = document.querySelector('#volume-output');
+const songArtist = document.querySelector('.song-artist'); 
+const songTitle = document.querySelector('.song-title');
+const buttonMute = document.querySelector('#mute-icon');
+let currentTrackTime = 0;
+let currentVolume = 0;
+let mutestate = 'unmute';
 const playListContainer = document.querySelector('.play-list');
 const settingsDashboard = document.querySelector('#settings');
 const settingsToggle = document.querySelector('.settings .toggle');
@@ -72,15 +83,16 @@ window.addEventListener('beforeunload', () => {
   setLocalStorage();
 });
 
-window.addEventListener('load', () => {
+window.addEventListener('DOMContentLoaded', () => {
   getLocalStorage();
   setState();
   getLinkToImage();
-  getQuotes(`assets/json/quotes-${lang}.json`);
   getWeather();
   showTime();
   makePlayList();
+  getQuotes(`assets/json/quotes-${lang}.json`)
 });
+
 
 
 /**
@@ -103,12 +115,51 @@ changeQuote.addEventListener('click', () => {
 /**
  * Simple Player Widget
  */
+
+songArtist.textContent = playList[0].artist;
+songTitle.textContent = playList[0].title;
+setInterval(() => {
+  if (isPlay) {
+    updateProgressValue();
+    if (audio.readyState > 0) {
+      displayBufferedAmount();
+    }
+  }
+}, 500);
 buttonPlay.addEventListener('click', playAudio);
 buttonNext.addEventListener('click', playNext);
 buttonPrev.addEventListener('click', playPrev);
 audio.addEventListener('ended', () => {
     playNext();
 });
+buttonShowPlaylist.addEventListener('click', togglePlaylist);
+progressBar.addEventListener('change', changeProgressBar);
+progressBar.addEventListener('input', (event) => {showRangeProgress(event.target)});
+volumeSlider.addEventListener('input', (event) => {showRangeProgress(event.target)});
+
+playListContainer.addEventListener('click', function(event) {
+  let playItem = event.target.closest('.play-item');
+  if (!playItem) return;
+
+  let trackId = playItem.dataset.id;
+  playNum = Number(trackId);
+  playFromPlaylist();
+});
+
+buttonMute.addEventListener('click', mute);
+
+volumeSlider.addEventListener('input', (e) => {
+  const value = Number(e.target.value);
+
+  buttonMute.className = value === 0 ? 'mute player-icon':
+                         value <= 30 ? 'volume-low player-icon' :
+                         value <= 50 ? 'volume-medium player-icon' :
+                         'volume-high player-icon';
+
+  volumeOutput.textContent = value;
+  audio.volume = value / 100;
+});
+
 
 /**
  * Settings Dashboard
@@ -295,7 +346,6 @@ todoList.addEventListener('click', (event) => {
     max-height: ${ parseInt(todoListHeight) + 80}px;
   `;
 
-  // console.log(todoItemDropdown.firstElementChild);
     new MoreMenu(todoItemDropdown.firstElementChild);
   }
 });
@@ -385,8 +435,6 @@ class MoreMenu {
     }
   }
 }
-
-
 
 todoNewInput.addEventListener('change', function(event) {
   let todoItem = this.value;
@@ -588,15 +636,40 @@ function playAudio() {
   if (isPlay) {
     audio.pause();
     buttonPlay.classList.remove('pause');
+    document.querySelector('.item-active').classList.remove('item-active');
     isPlay = false;
   } else {
     audio.src = playList[playNum].src;
-    audio.currentTime = 0;
+    songArtist.textContent = playList[playNum].artist;
+    songTitle.textContent = playList[playNum].title;
+    audio.currentTime = currentTrackTime;
     audio.play();
     buttonPlay.classList.add('pause');
     isPlay = true;
     stylePlayItems();
+    // setTimeout(hidePlaylist, 1000);
   }
+}
+
+function playFromPlaylist() {
+    let prevActiveId = document.querySelector('.item-active')?.dataset.id;
+    stylePlayItems();
+    let itemActiveId = document.querySelector('.item-active')?.dataset.id;
+    
+    if (prevActiveId === itemActiveId) {
+      audio.pause();
+      buttonPlay.classList.remove('pause');
+      document.querySelector('.item-active').classList.remove('item-active');
+      isPlay = false;
+    } else {
+      audio.src = playList[playNum].src;
+      songArtist.textContent = playList[playNum].artist;
+      songTitle.textContent = playList[playNum].title;
+      audio.currentTime = 0;
+      audio.play();
+      buttonPlay.classList.add('pause');
+      isPlay = true;
+    }
 }
 
 function playNext() {
@@ -606,6 +679,7 @@ function playNext() {
     playNum = 0;
   }
   isPlay = false;
+  audio.currentTime = 0;
   playAudio();
 }
 
@@ -616,14 +690,99 @@ function playPrev() {
     playNum = playList.length - 1;
   }
   isPlay = false;
+  audio.currentTime = 0;
   playAudio();
 }
 
+function togglePlaylist() {
+  buttonShowPlaylist.classList.toggle('hide');
+  playListContainer.classList.toggle('visible');
+
+  if (playListContainer.classList.contains('visible')) {
+    playListContainer.style.height = "auto";
+  } else {
+    playListContainer.style.height = "0";
+  }
+}
+
+function hidePlaylist() {
+  buttonShowPlaylist.classList.add('hide');
+  playListContainer.classList.remove('visible');
+
+  playListContainer.style.height = "0";
+}
+
+function changeProgressBar() {
+  currentTrackTime = progressBar.value;
+  audio.currentTime = currentTrackTime;
+};
+
+function updateProgressValue() {
+  progressBar.max = audio.duration;
+  progressBar.value = audio.currentTime;
+
+  document.querySelector('.currentTime').innerHTML = (formatTime(Math.floor(audio.currentTime)));
+  if (document.querySelector('.durationTime').innerHTML === "NaN:NaN") {
+      document.querySelector('.durationTime').innerHTML = "0:00";
+  } else {
+      document.querySelector('.durationTime').innerHTML = (formatTime(Math.floor(audio.duration)));
+  }
+};
+
+function formatTime(seconds) {
+  let min = Math.floor((seconds / 60));
+  let sec = Math.floor(seconds - (min * 60));
+  if (sec < 10){ 
+      sec  = `0${sec}`;
+  };
+  return `${min}:${sec}`;
+};
+
+function mute() {
+  if (mutestate === 'unmute') {
+    mutestate = 'mute';
+    this.classList.remove('volume-high');
+    this.classList.add('mute');
+    currentVolume = volumeSlider.value;
+    volumeSlider.value = 0;
+    audio.muted = true;
+  } else {
+    mutestate = 'unmute';
+    this.classList.remove('mute');
+    this.classList.add('volume-high');
+    volumeSlider.value = currentVolume;
+    audio.muted = false;
+    audio.volume = currentVolume / 100;
+  }
+}
+
+const showRangeProgress = (rangeInput) => {
+  if (rangeInput === progressBar) {
+    audioPlayerContainer.style.setProperty(
+      '--seek-before-width',
+      rangeInput.value / rangeInput.max * 100 + '%'
+    );
+  } else if (rangeInput === volumeSlider) {
+    audioPlayerContainer.style.setProperty(
+      '--volume-before-width',
+      rangeInput.value / rangeInput.max * 100 + '%'
+    );
+  }
+}
+
+const displayBufferedAmount = () => {
+  const bufferedAmount = 
+Math.floor(audio.buffered.end(audio.buffered.length - 1));
+  audioPlayerContainer.style.setProperty('--buffered-width',
+`${(bufferedAmount / progressBar.max) * 100}%`);
+}
+
 function makePlayList() {
-  playList.forEach(el => {
+  playList.forEach((el, index) => {
     const li = document.createElement('li');
     li.classList.add('play-item');
-    li.textContent = el.title;
+    li.dataset.id = index;
+    li.textContent = `${el.artist} - ${el.title} (${el.duration})`;
     playListContainer.append(li)
   })
 }
@@ -807,3 +966,68 @@ function uuidv4() {
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
 }
+
+const crosscheckMessage = `
+  1. Часы и календарь +15
+   [x] время выводится в 24-часовом формате +5
+   [x] время обновляется каждую секунду - часы идут +5
+   [x] выводится день недели, число, месяц +5
+
+  2. Приветствие +10
+   [x] текст приветствия меняется в зависимости от времени суток (утро, день, вечер, ночь) +5
+   [x] пользователь может ввести своё имя +5
+
+  3. Смена фонового изображения +20
+   [x] ссылка на фоновое изображение формируется с учётом времени суток и случайного номера изображения +5
+   [x] изображения перелистываются последовательно +5
+   [x] изображения перелистываются по кругу: +5
+   [x] при смене слайдов важно обеспечить плавную смену фоновых изображений +5
+
+  4. Виджет погоды +15
+   [x] при перезагрузке страницы приложения указанный пользователем город сохраняется +5
+   [x] данные о погоде включают в себя: иконку погоды, описание погоды, температуру в °C, скорость ветра в м/с, относительную влажность воздуха +5
+   [x] выводится уведомление об ошибке при вводе некорректных значений +5
+
+  5. Виджет цитата дня +10
+   [x] при загрузке страницы приложения отображается рандомная цитата и её автор +5
+   [x] при перезагрузке страницы цитата обновляется +5
+
+  6. Аудиоплеер +15
+   [x] при клике по кнопке Play/Pause проигрывается первый трек из блока play-list, иконка кнопки меняется на Pause +3
+   [x] при клике по кнопке Play/Pause во время проигрывания трека, останавливается проигрывание трека, иконка кнопки меняется на Play +3
+   [x] треки пролистываются по кругу +3
+   [x] трек, который в данный момент проигрывается, в блоке Play-list выделяется стилем +3
+   [x] после окончания проигрывания первого трека, автоматически запускается проигрывание следующего +3
+
+  7. Продвинутый аудиоплеер +20
+   [x] добавлен прогресс-бар в котором отображается прогресс проигрывания +3
+   [x] при перемещении ползунка прогресс-бара меняется текущее время воспроизведения трека +3
+   [x] над прогресс-баром отображается название трека +3
+   [x] есть кнопка звука при клике по которой можно включить/отключить звук +2
+   [x] добавлен регулятор громкости, при перемещении ползунка регулятора громкости меняется громкость проигрывания звука +3
+   [x] можно запустить и остановить проигрывания трека кликом по кнопке Play/Pause рядом с ним в плейлисте +3
+
+  8. Перевод приложения на два языка (en/ru или en/be) +15
+   [x] переводится язык и меняется формат отображения даты +3
+   [x] переводится приветствие и placeholder +3
+   [x] переводится прогноз погоды в т.ч описание погоды и город по умолчанию +3
+   [x] переводится цитата дня +3
+   [x] переводятся настройки приложения. При переключении языка приложения в настройках, язык настроек тоже меняется +3
+
+  9. Получение фонового изображения от API +10
+   [x] в качестве источника изображений может использоваться Unsplash API +5
+   [x] в качестве источника изображений может использоваться Flickr API +5
+
+  10. Настройки приложения +20
+   [x] в настройках приложения можно указать язык приложения (en/ru или en/be) +3
+   [x] в настройках приложения можно указать источник получения фото для фонового изображения: коллекция изображений GitHub, Unsplash API, Flickr API +3
+   [x] если источником получения фото указан API, в настройках приложения можно указать тег/теги, для которых API будет присылает фото +3
+   [x] в настройках приложения можно скрыть/отобразить любой из блоков, которые находятся на странице +3
+   [x] скрытие и отображение блоков происходит плавно, не влияя на другие элементы, которые находятся на странице, или плавно смещая их +3
+   [x] настройки приложения сохраняются при перезагрузке страницы +5
+
+  11. Дополнительный функционал на выбор +10
+   [x] ToDo List - список дел (как в оригинальном приложении) +10
+`;
+
+// console.log(crosscheckMessage);
